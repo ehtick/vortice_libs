@@ -72,9 +72,6 @@ set(KTX_INCLUDE_DIRS
 add_library(ktx ${KTX_SOURCES})
 
 target_compile_definitions(ktx PUBLIC LIBKTX)
-#if (WIN32)
-#    target_compile_definitions(ktx PUBLIC "KTX_API=__declspec(dllexport)")
-#endif()
 target_compile_definitions(ktx PUBLIC KHRONOS_STATIC)
 target_compile_definitions(ktx PUBLIC KTX_FEATURE_WRITE=0)
 target_compile_definitions(ktx PUBLIC KTX_FEATURE_KTX1)
