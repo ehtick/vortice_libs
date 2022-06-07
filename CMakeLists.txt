@@ -18,6 +18,11 @@ project (
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(LIBRARY_TYPE MODULE)
+if (IOS OR EMSCRIPTEN)
+    set(LIBRARY_TYPE STATIC)
+endif()
+
 # Add third party libraries
 add_subdirectory(third_party)
 
