@@ -5,16 +5,19 @@ set(KTX_SOURCES
     ${KTX_DIR}/lib/dfdutils/createdfd.c
     ${KTX_DIR}/lib/dfdutils/colourspaces.c
     ${KTX_DIR}/lib/dfdutils/dfd.h
-    ${KTX_DIR}/lib/dfdutils/dfd2vk.inl
     ${KTX_DIR}/lib/dfdutils/interpretdfd.c
     ${KTX_DIR}/lib/dfdutils/printdfd.c
     ${KTX_DIR}/lib/dfdutils/queries.c
     ${KTX_DIR}/lib/dfdutils/vk2dfd.c
-    #${KTX_DIR}/lib/etcdec.cxx
-    #${KTX_DIR}/lib/etcunpack.cxx
+    ${KTX_DIR}/lib/dfdutils/vk2dfd.inl
+    ${KTX_DIR}/lib/dfdutils/vulkan/vk_platform.h
+    ${KTX_DIR}/lib/dfdutils/vulkan/vulkan_core.h
+    ${KTX_DIR}/lib/etcdec.cxx
+    ${KTX_DIR}/lib/etcunpack.cxx
     ${KTX_DIR}/lib/filestream.c
     ${KTX_DIR}/lib/filestream.h
     ${KTX_DIR}/lib/formatsize.h
+    ${KTX_DIR}/lib/gl_format.h
     ${KTX_DIR}/lib/hashlist.c
     ${KTX_DIR}/lib/info.c
     ${KTX_DIR}/lib/ktxint.h
@@ -32,8 +35,6 @@ set(KTX_SOURCES
     ${KTX_DIR}/lib/basisu/transcoder/basisu_containers.h
     ${KTX_DIR}/lib/basisu/transcoder/basisu_containers_impl.h
     ${KTX_DIR}/lib/basisu/transcoder/basisu_file_headers.h
-    #${KTX_DIR}/lib/basisu/transcoder/basisu_global_selector_cb.h
-    #${KTX_DIR}/lib/basisu/transcoder/basisu_global_selector_palette.h
     ${KTX_DIR}/lib/basisu/transcoder/basisu_transcoder_internal.h
     ${KTX_DIR}/lib/basisu/transcoder/basisu_transcoder_uastc.h
     ${KTX_DIR}/lib/basisu/transcoder/basisu_transcoder.cpp
@@ -50,10 +51,10 @@ set(KTX_SOURCES
     ${KTX_DIR}/lib/texture2.h
 
     # Vulkan support
-    #${KTX_DIR}/lib/vk_format.h
-    #${KTX_DIR}/lib/vkformat_check.c
-    #${KTX_DIR}/lib/vkformat_enum.h
-    #${KTX_DIR}/lib/vkformat_str.c
+    ${KTX_DIR}/lib/vk_format.h
+    ${KTX_DIR}/lib/vkformat_check.c
+    ${KTX_DIR}/lib/vkformat_enum.h
+    ${KTX_DIR}/lib/vkformat_str.c
     #${KTX_DIR}/lib/vk_funcs.c
     #${KTX_DIR}/lib/vk_funcs.h
     #${KTX_DIR}/lib/vkloader.c    
@@ -71,11 +72,17 @@ set(KTX_INCLUDE_DIRS
 add_library(ktx ${KTX_SOURCES})
 
 target_compile_definitions(ktx PUBLIC LIBKTX)
-if (WIN32)
-target_compile_definitions(ktx PUBLIC "KTX_API=__declspec(dllexport)")
-endif()
+#if (WIN32)
+#    target_compile_definitions(ktx PUBLIC "KTX_API=__declspec(dllexport)")
+#endif()
+target_compile_definitions(ktx PUBLIC KHRONOS_STATIC)
 target_compile_definitions(ktx PUBLIC KTX_FEATURE_WRITE=0)
-target_compile_definitions(ktx PUBLIC BASISD_SUPPORT_KTX2_ZSTD=0)
+target_compile_definitions(ktx PUBLIC KTX_FEATURE_KTX1)
+target_compile_definitions(ktx PRIVATE
+    # We're reading the files ourselves so don't need Basis KTX v2 support.
+    BASISD_SUPPORT_KTX2_ZSTD=0
+    BASISD_SUPPORT_KTX2=0
+)
 target_compile_definitions(ktx PUBLIC BASISU_NO_ITERATOR_DEBUG_LEVEL)
 
 target_include_directories(ktx PUBLIC ${KTX_INCLUDE_DIRS})

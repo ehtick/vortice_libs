@@ -34,7 +34,7 @@ jobs:
     - name: Package Windows
       run: |
         mkdir bin/win-x64
-        mv build_win_64\MinSizeRel\vortice_image.dll bin/win-x64
+        mv build_win_64\lib\MinSizeRel\vortice_image.dll bin/win-x64
     - uses: actions/upload-artifact@v2
       with:
         name: vortice_libs_windows
