@@ -1,0 +1,73 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+
+env:
+  # Indicates the CMake build directory where project files and binaries are being produced.
+  CMAKE_BUILD_DIR: ${{ github.workspace }}/build/
+  VGFX_SAMPLES: ON
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Configure Win64
+      run: cmake . -G "Visual Studio 17 2022" -A x64 -Bbuild_win_64
+    - name: Build Win64
+      run: cmake --build build_win_64 --config MinSizeRel
+
+    - name: Package Windows
+      run: |
+        mkdir bin/win-x64
+        mv build_win_64\MinSizeRel\vortice_image.dll bin/win-x64
+    - uses: actions/upload-artifact@v2
+      with:
+        name: vortice_libs_windows
+        path: bin
+
+  combine:
+    name: combine artifacts
+    runs-on: ubuntu-20.04
+    needs: [windows]
+    steps:
+      - name: download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: artifacts
+      - name: combine
+        run: |
+          mkdir vortice_libs
+          cp -r artifacts/vortice_libs_windows/* vortice_libs
+      - name: zip
+        run: zip -r vortice_libs.zip vortice_libs
+      - uses: AButler/upload-release-assets@v2.0
+        if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          files: vortice_libs.zip
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: vortice_libs.zip
+          path: vortice_libs.zip
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |
+            vortice_libs_windows
