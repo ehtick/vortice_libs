@@ -1,6 +1,7 @@
 add_library(vortice_image ${LIBRARY_TYPE}
     vortice_image.h
-    ktx_c_binding.cpp
+    vortice_image.cpp
+    vortice_image_private.h
 )
 
  target_compile_definitions(vortice_image PRIVATE
@@ -9,6 +10,7 @@ add_library(vortice_image ${LIBRARY_TYPE}
  )
 
 target_link_libraries(vortice_image
+    stb
     ktx
 )
 
