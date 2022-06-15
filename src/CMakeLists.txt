@@ -1,3 +1,5 @@
 add_subdirectory(vortice_image)
 
-add_subdirectory(vma)
+if (NOT (WINDOWS_STORE OR EMSCRIPTEN OR ANDROID))
+    add_subdirectory(vma)
+endif ()
