@@ -84,6 +84,7 @@ static Image* loadDDS(const uint8_t* data, size_t size)
 
     length -= sizeof(DDSHeader);
     data += sizeof(DDSHeader);
+    return nullptr;
 }
 
 static Image* loadASTC(const uint8_t* data, size_t size)
@@ -114,7 +115,8 @@ static Image* loadSTB(const uint8_t* data, size_t size)
             case 2: format = IMAGE_FORMAT_RG16; break;
             case 4: format = IMAGE_FORMAT_RGBA16; break;
             default:
-                assert(FALSE && "Unsupported channel count for 16 bit image: %d", channels);
+                //assert(FALSE && "Unsupported channel count for 16 bit image: %d", channels);
+                UNREACHABLE();
         }
     }
     else if (stbi_is_hdr_from_memory(data, (int)size))
