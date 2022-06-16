@@ -63,6 +63,33 @@ jobs:
         name: vortice_libs_windows
         path: bin
 
+  linux:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+        lfs: true
+
+    - name: apt_install
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get -qq install libzstd-dev ninja-build
+    - name: Configure linux-64
+      run: cmake . -G Ninja -Bbuild_linux_64 -DCMAKE_BUILD_TYPE=MinSizeRel
+    - name: build_linux_64
+      run: cmake --build build_linux_64 
+
+    # Linux, WebGL and Android artifact 
+    - name: Package Linux
+      run: |
+        mkdir -p bin/linux-x64
+        mv build_linux_64/libvma.so bin/linux-x64
+    - uses: actions/upload-artifact@v2
+      with:
+        name: vortice_libs_linux
+        path: bin
+
   combine:
     name: combine artifacts
     runs-on: ubuntu-20.04
@@ -79,6 +106,7 @@ jobs:
         run: |
           mkdir vortice_libs
           cp -r artifacts/vortice_libs_windows/* vortice_libs
+          cp -r artifacts/vortice_libs_linux/* vortice_libs
       - name: zip
         run: zip -r vortice_libs.zip vortice_libs
       - uses: AButler/upload-release-assets@v2.0
@@ -94,3 +122,4 @@ jobs:
         with:
           name: |
             vortice_libs_windows
+            vortice_libs_linux
