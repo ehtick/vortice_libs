@@ -1,7 +1,11 @@
-// Copyright © Amer Koleci and Contributors.
+// Copyright ï¿½ Amer Koleci and Contributors.
 // Licensed under the MIT License (MIT). See LICENSE in the repository root for more information.
 
 #include "vortice_image_private.h"
+#include <stdlib.h> // malloc, free
+#include <string.h> // memset
+#include <float.h> // FLT_MAX
+#include <assert.h>
 
 // TODO: Use WIC on windows platform
 

@@ -93,7 +93,7 @@ jobs:
   combine:
     name: combine artifacts
     runs-on: ubuntu-20.04
-    needs: [windows]
+    needs: [windows, linux]
     steps:
       - name: download artifacts
         uses: actions/download-artifact@v2
