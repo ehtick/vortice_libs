@@ -11,7 +11,7 @@
 #        else
 #            define VGPU_IMAGE_API __declspec(dllimport)
 #        endif
-#    else 
+#    else
 #        if defined(VGPU_IMPLEMENTATION)
 #            define VGPU_IMAGE_API __attribute__((visibility("default")))
 #        else
@@ -22,6 +22,7 @@
 #    define VGPU_IMAGE_API
 #endif
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
