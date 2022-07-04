@@ -83,8 +83,8 @@ jobs:
     - name: Package Linux
       run: |
         mkdir -p bin/linux-x64
-        mv lib/libvortice_image.so bin/linux-x64
-        mv lib/libvma.so bin/linux-x64
+        mv build_linux_64/lib/libvortice_image.so bin/linux-x64
+        mv build_linux_64/lib/libvma.so bin/linux-x64
     - uses: actions/upload-artifact@v2
       with:
         name: vortice_libs_linux
