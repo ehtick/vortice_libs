@@ -52,11 +52,11 @@ jobs:
         mkdir bin/win10-arm64
         mkdir bin/win10-arm
         mkdir bin/win10-x64
-        mv build_win_64\lib\MinSizeRel\VorticeImage.dll bin/win-x64
-        mv build_uwp_arm64\lib\MinSizeRel\VorticeImage.dll bin/win10-arm64
-        mv build_uwp_arm\lib\MinSizeRel\VorticeImage.dll bin/win10-arm
-        mv build_uwp_x64\lib\MinSizeRel\VorticeImage.dll bin/win10-x64
-        mv build_win_64\lib\MinSizeRel\vma.dll bin/win-x64
+        mv build_win_64\bin\MinSizeRel\VorticeImage.dll bin/win-x64
+        mv build_uwp_arm64\bin\MinSizeRel\VorticeImage.dll bin/win10-arm64
+        mv build_uwp_arm\bin\MinSizeRel\VorticeImage.dll bin/win10-arm
+        mv build_uwp_x64\bin\MinSizeRel\VorticeImage.dll bin/win10-x64
+        mv build_win_64\bin\MinSizeRel\vma.dll bin/win-x64
     - uses: actions/upload-artifact@v2
       with:
         name: vortice_libs_windows

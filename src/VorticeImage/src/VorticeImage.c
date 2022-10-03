@@ -26,15 +26,15 @@ typedef struct Mipmap {
     size_t stride;
 } Mipmap;
 
-struct VImage
-{
-    uint32_t baseWidth;
-    uint32_t baseHeight;
-    uint32_t format;
-    uint32_t layers;
-    uint32_t levels;
+struct VImage {
+    VImageDimension dimension;
+    VImageFormat    format;
+    uint32_t        baseWidth;
+    uint32_t        baseHeight;
+    uint32_t        depthOrArraySize;
+    uint32_t        mipLevels;
     void* data;
-    size_t size;
+    size_t          size;
     Mipmap* mipmaps;
 };
 
@@ -139,13 +139,132 @@ static VImage* VImage_LoadSTB(const uint8_t* data, size_t size)
     image->baseWidth = width;
     image->baseHeight = height;
     image->format = format;
-    image->layers = 1;
-    image->levels = 1;
+    image->depthOrArraySize = 1;
+    image->mipLevels = 1;
     image->data = stb_data;
     image->size = memorySize;
     image->mipmaps[0].data = stb_data;
     image->mipmaps[0].size = memorySize;
     return image;
+}
+
+uint32_t _VImage_CountMips(uint32_t width, uint32_t height)
+{
+    uint32_t mipLevels = 1;
+
+    while (height > 1 || width > 1)
+    {
+        if (height > 1)
+            height >>= 1;
+
+        if (width > 1)
+            width >>= 1;
+
+        ++mipLevels;
+    }
+
+    return mipLevels;
+}
+
+uint32_t _VImage_CountMips3D(uint32_t width, uint32_t height, uint32_t depth)
+{
+    uint32_t mipLevels = 1;
+
+    while (height > 1 || width > 1 || depth > 1)
+    {
+        if (height > 1)
+            height >>= 1;
+
+        if (width > 1)
+            width >>= 1;
+
+        if (depth > 1)
+            depth >>= 1;
+
+        ++mipLevels;
+    }
+
+    return mipLevels;
+}
+
+bool VImage_CalculateMipLevels(uint32_t width, uint32_t height, uint32_t* pMipLevels)
+{
+    if (*pMipLevels > 1)
+    {
+        const size_t maxMips = _VImage_CountMips(width, height);
+        if (*pMipLevels > maxMips)
+            return false;
+    }
+    else if (*pMipLevels == 0)
+    {
+        *pMipLevels = _VImage_CountMips(width, height);
+    }
+    else
+    {
+        *pMipLevels = 1;
+    }
+
+    return true;
+}
+
+bool VImage_CalculateMipLevels3D(uint32_t width, uint32_t height, uint32_t depth, uint32_t* pMipLevels)
+{
+    if (*pMipLevels > 1)
+    {
+        const size_t maxMips = _VImage_CountMips3D(width, height, depth);
+        if (*pMipLevels > maxMips)
+            return false;
+    }
+    else if (*pMipLevels == 0)
+    {
+        *pMipLevels = _VImage_CountMips3D(width, height, depth);
+    }
+    else
+    {
+        *pMipLevels = 1;
+    }
+
+    return true;
+}
+
+bool VImage_IsCompressed(VImageFormat format) {
+    return format >= IMAGE_FORMAT_BC1_UNORM && format <= IMAGE_FORMAT_ASTC_12x12;
+}
+
+bool VImage_ComputePitch(VImageFormat format, uint32_t width, uint32_t height, uint32_t* rowPitch, uint32_t* slicePitch) {
+    uint64_t pitch = 0;
+    uint64_t slice = 0;
+
+    switch (format)
+    {
+    case IMAGE_FORMAT_BC1_UNORM:
+    case IMAGE_FORMAT_BC4_UNORM:
+    case IMAGE_FORMAT_BC4_SNORM:
+        assert(VImage_IsCompressed(format));
+        {
+            const uint32_t nbw = _VIMAGE_MAX(1u, (width + 3u) / 4u);
+            const uint32_t nbh = _VIMAGE_MAX(1u, (height + 3u) / 4u);
+            pitch = nbw * 8u;
+            slice = pitch * nbh;
+        }
+        break;
+
+    case IMAGE_FORMAT_BC2_UNORM:
+    case IMAGE_FORMAT_BC3_UNORM:
+    case IMAGE_FORMAT_BC5_UNORM:
+    case IMAGE_FORMAT_BC5_SNORM:
+    case IMAGE_FORMAT_BC6H_UF16:
+    case IMAGE_FORMAT_BC6H_SF16:
+    case IMAGE_FORMAT_BC7_UNORM:
+        assert(VImage_IsCompressed(format));
+        {
+            const uint64_t nbw = _VIMAGE_MAX(1u, (width + 3u) / 4u);
+            const uint64_t nbh = _VIMAGE_MAX(1u, (height + 3u) / 4u);
+            pitch = nbw * 16u;
+            slice = pitch * nbh;
+        }
+        break;
+    }
 }
 
 uint32_t VImage_GetMemorySize(VImageFormat format, uint32_t w, uint32_t h)
@@ -168,16 +287,19 @@ uint32_t VImage_GetMemorySize(VImageFormat format, uint32_t w, uint32_t h)
     case IMAGE_FORMAT_RGB5A1: return w * h * 2;
     case IMAGE_FORMAT_RGB10A2: return w * h * 4;
     case IMAGE_FORMAT_RG11B10F: return w * h * 4;
-    case IMAGE_FORMAT_BC1: return ((w + 3) / 4) * ((h + 3) / 4) * 8;
-    case IMAGE_FORMAT_BC2:
-    case IMAGE_FORMAT_BC3:
-    case IMAGE_FORMAT_BC4U:
-    case IMAGE_FORMAT_BC4S:
-    case IMAGE_FORMAT_BC5U:
-    case IMAGE_FORMAT_BC5S:
-    case IMAGE_FORMAT_BC6UF:
-    case IMAGE_FORMAT_BC6SF:
-    case IMAGE_FORMAT_BC7: return ((w + 3) / 4) * ((h + 3) / 4) * 16;
+    case IMAGE_FORMAT_BC1_UNORM:
+        return ((w + 3) / 4) * ((h + 3) / 4) * 8;
+    case IMAGE_FORMAT_BC2_UNORM:
+    case IMAGE_FORMAT_BC3_UNORM:
+    case IMAGE_FORMAT_BC4_UNORM:
+    case IMAGE_FORMAT_BC4_SNORM:
+    case IMAGE_FORMAT_BC5_UNORM:
+    case IMAGE_FORMAT_BC5_SNORM:
+    case IMAGE_FORMAT_BC6H_UF16:
+    case IMAGE_FORMAT_BC6H_SF16:
+    case IMAGE_FORMAT_BC7_UNORM:
+        return ((w + 3) / 4) * ((h + 3) / 4) * 16;
+
     case IMAGE_FORMAT_ASTC_4x4: return ((w + 3) / 4) * ((h + 3) / 4) * 16;
     case IMAGE_FORMAT_ASTC_5x4: return ((w + 4) / 5) * ((h + 3) / 4) * 16;
     case IMAGE_FORMAT_ASTC_5x5: return ((w + 4) / 5) * ((h + 4) / 5) * 16;
@@ -194,6 +316,23 @@ uint32_t VImage_GetMemorySize(VImageFormat format, uint32_t w, uint32_t h)
     case IMAGE_FORMAT_ASTC_12x12: return ((w + 11) / 12) * ((h + 11) / 12) * 16;
     default: VIMAGE_UNREACHABLE();
     }
+}
+
+VImage* VImage_Create2D(VImageFormat format, uint32_t width, uint32_t height, uint32_t arraySize, uint32_t mipLevels) {
+    if (!VImage_CalculateMipLevels(width, height, &mipLevels)) {
+        return NULL;
+    }
+
+    VImage* image = (VImage*)malloc(sizeof(VImage));
+    assert(image);
+
+    image->dimension = VIMAGE_DIMENSION_TEXTURE2D;
+    image->baseWidth = width;
+    image->baseHeight = height;
+    image->format = format;
+    image->depthOrArraySize = arraySize;
+    image->mipLevels = mipLevels;
+    return image;
 }
 
 VImage* VImage_CreateFromMemory(const uint8_t* data, size_t size)
@@ -217,22 +356,22 @@ void VImage_Destroy(VImage* image)
     }
 }
 
-uint32_t VImage_GetBaseWidth(VImage* image)
-{
+VImageDimension VImage_GetDimension(VImage* image) {
+    return image->dimension;
+}
+
+uint32_t VImage_GetBaseWidth(VImage* image) {
     return image->baseWidth;
 }
 
-uint32_t VImage_GetBaseHeight(VImage* image)
-{
+uint32_t VImage_GetBaseHeight(VImage* image) {
     return image->baseHeight;
 }
 
-uint32_t VImage_GetWidth(VImage* image, uint32_t level)
-{
+uint32_t VImage_GetWidth(VImage* image, uint32_t level) {
     return _VIMAGE_MAX(image->baseWidth >> level, 1);
 }
 
-uint32_t VImage_GetHeight(VImage* image, uint32_t level)
-{
+uint32_t VImage_GetHeight(VImage* image, uint32_t level) {
     return _VIMAGE_MAX(image->baseHeight >> level, 1);
 }
