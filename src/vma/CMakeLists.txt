@@ -1,4 +1,4 @@
-add_library(vma ${LIBRARY_TYPE}
+add_library(vma 
     vk_mem_alloc.h
     vk_mem_alloc.cpp
 )

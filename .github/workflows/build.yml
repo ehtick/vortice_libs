@@ -15,7 +15,6 @@ on:
 env:
   # Indicates the CMake build directory where project files and binaries are being produced.
   CMAKE_BUILD_DIR: ${{ github.workspace }}/build/
-  VGFX_SAMPLES: ON
 
 jobs:
   windows:
@@ -53,10 +52,10 @@ jobs:
         mkdir bin/win10-arm64
         mkdir bin/win10-arm
         mkdir bin/win10-x64
-        mv build_win_64\lib\MinSizeRel\vortice_image.dll bin/win-x64
-        mv build_uwp_arm64\lib\MinSizeRel\vortice_image.dll bin/win10-arm64
-        mv build_uwp_arm\lib\MinSizeRel\vortice_image.dll bin/win10-arm
-        mv build_uwp_x64\lib\MinSizeRel\vortice_image.dll bin/win10-x64
+        mv build_win_64\lib\MinSizeRel\VorticeImage.dll bin/win-x64
+        mv build_uwp_arm64\lib\MinSizeRel\VorticeImage.dll bin/win10-arm64
+        mv build_uwp_arm\lib\MinSizeRel\VorticeImage.dll bin/win10-arm
+        mv build_uwp_x64\lib\MinSizeRel\VorticeImage.dll bin/win10-x64
         mv build_win_64\lib\MinSizeRel\vma.dll bin/win-x64
     - uses: actions/upload-artifact@v2
       with:
@@ -83,7 +82,7 @@ jobs:
     - name: Package Linux
       run: |
         mkdir -p bin/linux-x64
-        mv build_linux_64/lib/libvortice_image.so bin/linux-x64
+        mv build_linux_64/lib/libVorticeImage.so bin/linux-x64
         mv build_linux_64/lib/libvma.so bin/linux-x64
     - uses: actions/upload-artifact@v2
       with:
