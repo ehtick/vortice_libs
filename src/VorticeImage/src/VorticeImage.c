@@ -105,15 +105,15 @@ static VImage* VImage_LoadKTX2(const uint8_t* data, size_t size)
 static VImage* VImage_LoadSTB(const uint8_t* data, size_t size)
 {
     void* stb_data;
-    VImageFormat format;
+    VImageFormat format = IMAGE_FORMAT_RGBA8_UNORM;
     int width, height, channels;
     if (stbi_is_16_bit_from_memory(data, (int)size))
     {
         stb_data = stbi_load_16_from_memory(data, (int)size, &width, &height, &channels, 0);
         switch (channels) {
-        case 1: format = IMAGE_FORMAT_R16; break;
-        case 2: format = IMAGE_FORMAT_RG16; break;
-        case 4: format = IMAGE_FORMAT_RGBA16; break;
+        case 1: format = IMAGE_FORMAT_R16_UNORM; break;
+        case 2: format = IMAGE_FORMAT_RG16_UNORM; break;
+        case 4: format = IMAGE_FORMAT_RGBA16_UNORM; break;
         default:
             //assert(FALSE && "Unsupported channel count for 16 bit image: %d", channels);
             VIMAGE_UNREACHABLE();
@@ -122,29 +122,22 @@ static VImage* VImage_LoadSTB(const uint8_t* data, size_t size)
     else if (stbi_is_hdr_from_memory(data, (int)size))
     {
         stb_data = stbi_loadf_from_memory(data, (int)size, &width, &height, NULL, 4);
-        format = IMAGE_FORMAT_RGBA32F;
+        format = IMAGE_FORMAT_RGBA32_FLOAT;
     }
     else {
         stb_data = stbi_load_from_memory(data, (int)size, &width, &height, NULL, 4);
-        format = IMAGE_FORMAT_RGBA8;
+        format = IMAGE_FORMAT_RGBA8_UNORM;
     }
 
     if (!stb_data) {
         return NULL;
     }
 
-    uint32_t memorySize = VImage_GetMemorySize(format, width, height);
-
-    VImage* image = (VImage*)malloc(sizeof(VImage));
-    image->baseWidth = width;
-    image->baseHeight = height;
-    image->format = format;
-    image->depthOrArraySize = 1;
-    image->mipLevels = 1;
-    image->data = stb_data;
-    image->size = memorySize;
-    image->mipmaps[0].data = stb_data;
-    image->mipmaps[0].size = memorySize;
+    VImage* image = VImage_Create2D(format, width, height, 1, 1);
+    //image->data = stb_data;
+    //image->size = memorySize;
+    //image->mipmaps[0].data = stb_data;
+    //image->mipmaps[0].size = memorySize;
     return image;
 }
 
@@ -231,6 +224,122 @@ bool VImage_IsCompressed(VImageFormat format) {
     return format >= IMAGE_FORMAT_BC1_UNORM && format <= IMAGE_FORMAT_ASTC_12x12;
 }
 
+uint32_t VImage_BitsPerPixel(VImageFormat format) {
+    switch (format)
+    {
+    case IMAGE_FORMAT_RGBA32_UINT:
+    case IMAGE_FORMAT_RGBA32_SINT:
+    case IMAGE_FORMAT_RGBA32_FLOAT:
+        return 128;
+
+    //case IMAGE_FORMAT_RGB32_UINT:
+    //case IMAGE_FORMAT_RGB32_SINT:
+    //case IMAGE_FORMAT_RGB32_FLOAT:
+    //    return 96;
+
+    case IMAGE_FORMAT_RG32_UINT:
+    case IMAGE_FORMAT_RG32_SINT:
+    case IMAGE_FORMAT_RG32_FLOAT:
+    case IMAGE_FORMAT_RGBA16_UNORM:
+    case IMAGE_FORMAT_RGBA16_SNORM:
+    case IMAGE_FORMAT_RGBA16_UINT:
+    case IMAGE_FORMAT_RGBA16_SINT:
+    case IMAGE_FORMAT_RGBA16_FLOAT:
+    case IMAGE_FORMAT_D32_FLOAT_S8:
+    //case IMAGE_FORMAT_Y416:
+    //case IMAGE_FORMAT_Y210:
+    //case IMAGE_FORMAT_Y216:
+        return 64;
+
+    case IMAGE_FORMAT_RGB10A2_UNORM:
+    case IMAGE_FORMAT_RGB10A2_UINT:
+    case IMAGE_FORMAT_RG11B10_FLOAT:
+    case IMAGE_FORMAT_RGBA8_UNORM:
+    case IMAGE_FORMAT_RGBA8_SNORM:
+    case IMAGE_FORMAT_RGBA8_UINT:
+    case IMAGE_FORMAT_RGBA8_SINT:
+    case IMAGE_FORMAT_RG16_FLOAT:
+    case IMAGE_FORMAT_RG16_UNORM:
+    case IMAGE_FORMAT_RG16_UINT:
+    case IMAGE_FORMAT_RG16_SNORM:
+    case IMAGE_FORMAT_RG16_SINT:
+    case IMAGE_FORMAT_D32_FLOAT:
+    case IMAGE_FORMAT_R32_FLOAT:
+    case IMAGE_FORMAT_R32_UINT:
+    case IMAGE_FORMAT_R32_SINT:
+    case IMAGE_FORMAT_D24_UNORM_S8:
+    case IMAGE_FORMAT_RGB9E5_FLOAT:
+    case IMAGE_FORMAT_BGRA8_UNORM:
+    //case IMAGE_FORMAT_AYUV:
+    //case IMAGE_FORMAT_Y410:
+    //case IMAGE_FORMAT_YUY2:
+    //case XBOX_DXGI_FORMAT_R10G10B10_7E3_A2_FLOAT:
+    //case XBOX_DXGI_FORMAT_R10G10B10_6E4_A2_FLOAT:
+    //case XBOX_DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM:
+        return 32;
+
+    //case IMAGE_FORMAT_P010:
+    //case IMAGE_FORMAT_P016:
+    //case XBOX_DXGI_FORMAT_D16_UNORM_S8_UINT:
+    //case XBOX_DXGI_FORMAT_R16_UNORM_X8_TYPELESS:
+    //case XBOX_DXGI_FORMAT_X16_TYPELESS_G8_UINT:
+    //case WIN10_DXGI_FORMAT_V408:
+    //    return 24;
+
+    case IMAGE_FORMAT_RG8_UNORM:
+    case IMAGE_FORMAT_RG8_SNORM:
+    case IMAGE_FORMAT_RG8_UINT:
+    case IMAGE_FORMAT_RG8_SINT:
+    case IMAGE_FORMAT_R16_FLOAT:
+    case IMAGE_FORMAT_D16_UNORM:
+    case IMAGE_FORMAT_R16_UNORM:
+    case IMAGE_FORMAT_R16_UINT:
+    case IMAGE_FORMAT_R16_SNORM:
+    case IMAGE_FORMAT_R16_SINT:
+    //case IMAGE_FORMAT_B5G6R5_UNORM:
+    //case IMAGE_FORMAT_B5G5R5A1_UNORM:
+    //case IMAGE_FORMAT_A8P8:
+    //case IMAGE_FORMAT_FORMAT_B4G4R4A4_UNORM:
+    //case WIN10_DXGI_FORMAT_P208:
+    //case WIN10_DXGI_FORMAT_V208:
+        return 16;
+
+    //case DXGI_FORMAT_NV12:
+    //case DXGI_FORMAT_420_OPAQUE:
+    //case DXGI_FORMAT_NV11:
+    //    return 12;
+
+    case IMAGE_FORMAT_R8_UNORM:
+    case IMAGE_FORMAT_R8_SNORM:
+    case IMAGE_FORMAT_R8_UINT:
+    case IMAGE_FORMAT_R8_SINT:
+    //case IMAGE_FORMAT_A8_UNORM:
+    case IMAGE_FORMAT_BC2_UNORM:
+    case IMAGE_FORMAT_BC3_UNORM:
+    case IMAGE_FORMAT_BC5_UNORM:
+    case IMAGE_FORMAT_BC5_SNORM:
+    case IMAGE_FORMAT_BC6H_UF16:
+    case IMAGE_FORMAT_BC6H_SF16:
+    case IMAGE_FORMAT_BC7_UNORM:
+    //case IMAGE_FORMAT_BC7_UNORM_SRGB:
+    //case IMAGE_FORMAT_AI44:
+    //case IMAGE_FORMAT_IA44:
+    //case IMAGE_FORMAT_P8:
+    //case XBOX_DXGI_FORMAT_R4G4_UNORM:
+        return 8;
+
+    //case IMAGE_FORMAT_R1_UNORM:
+    //    return 1;
+
+    case IMAGE_FORMAT_BC1_UNORM:
+    case IMAGE_FORMAT_BC4_UNORM:
+    case IMAGE_FORMAT_BC4_SNORM:
+        return 4;
+    default:
+        return 0;
+    }
+}
+
 bool VImage_ComputePitch(VImageFormat format, uint32_t width, uint32_t height, uint32_t* rowPitch, uint32_t* slicePitch) {
     uint64_t pitch = 0;
     uint64_t slice = 0;
@@ -264,58 +373,79 @@ bool VImage_ComputePitch(VImageFormat format, uint32_t width, uint32_t height, u
             slice = pitch * nbh;
         }
         break;
-    }
-}
 
-uint32_t VImage_GetMemorySize(VImageFormat format, uint32_t w, uint32_t h)
-{
-    switch (format)
-    {
-    case IMAGE_FORMAT_R8: return w * h * 1;
-    case IMAGE_FORMAT_RG8: return w * h * 2;
-    case IMAGE_FORMAT_RGBA8: return w * h * 4;
-    case IMAGE_FORMAT_R16: return w * h * 2;
-    case IMAGE_FORMAT_RG16: return w * h * 4;
-    case IMAGE_FORMAT_RGBA16: return w * h * 8;
-    case IMAGE_FORMAT_R16F: return w * h * 2;
-    case IMAGE_FORMAT_RG16F: return w * h * 4;
-    case IMAGE_FORMAT_RGBA16F: return w * h * 8;
-    case IMAGE_FORMAT_R32F: return w * h * 4;
-    case IMAGE_FORMAT_RG32F: return w * h * 8;
-    case IMAGE_FORMAT_RGBA32F: return w * h * 16;
-    case IMAGE_FORMAT_RGB565: return w * h * 2;
-    case IMAGE_FORMAT_RGB5A1: return w * h * 2;
-    case IMAGE_FORMAT_RGB10A2: return w * h * 4;
-    case IMAGE_FORMAT_RG11B10F: return w * h * 4;
-    case IMAGE_FORMAT_BC1_UNORM:
-        return ((w + 3) / 4) * ((h + 3) / 4) * 8;
-    case IMAGE_FORMAT_BC2_UNORM:
-    case IMAGE_FORMAT_BC3_UNORM:
-    case IMAGE_FORMAT_BC4_UNORM:
-    case IMAGE_FORMAT_BC4_SNORM:
-    case IMAGE_FORMAT_BC5_UNORM:
-    case IMAGE_FORMAT_BC5_SNORM:
-    case IMAGE_FORMAT_BC6H_UF16:
-    case IMAGE_FORMAT_BC6H_SF16:
-    case IMAGE_FORMAT_BC7_UNORM:
-        return ((w + 3) / 4) * ((h + 3) / 4) * 16;
+#if TODO
+    case DXGI_FORMAT_R8G8_B8G8_UNORM:
+    case DXGI_FORMAT_G8R8_G8B8_UNORM:
+    case DXGI_FORMAT_YUY2:
+        assert(IsPacked(fmt));
+        pitch = ((uint64_t(width) + 1u) >> 1) * 4u;
+        slice = pitch * uint64_t(height);
+        break;
 
-    case IMAGE_FORMAT_ASTC_4x4: return ((w + 3) / 4) * ((h + 3) / 4) * 16;
-    case IMAGE_FORMAT_ASTC_5x4: return ((w + 4) / 5) * ((h + 3) / 4) * 16;
-    case IMAGE_FORMAT_ASTC_5x5: return ((w + 4) / 5) * ((h + 4) / 5) * 16;
-    case IMAGE_FORMAT_ASTC_6x5: return ((w + 5) / 6) * ((h + 4) / 5) * 16;
-    case IMAGE_FORMAT_ASTC_6x6: return ((w + 5) / 6) * ((h + 5) / 6) * 16;
-    case IMAGE_FORMAT_ASTC_8x5: return ((w + 7) / 8) * ((h + 4) / 5) * 16;
-    case IMAGE_FORMAT_ASTC_8x6: return ((w + 7) / 8) * ((h + 5) / 6) * 16;
-    case IMAGE_FORMAT_ASTC_8x8: return ((w + 7) / 8) * ((h + 7) / 8) * 16;
-    case IMAGE_FORMAT_ASTC_10x5: return ((w + 9) / 10) * ((h + 4) / 5) * 16;
-    case IMAGE_FORMAT_ASTC_10x6: return ((w + 9) / 10) * ((h + 5) / 6) * 16;
-    case IMAGE_FORMAT_ASTC_10x8: return ((w + 9) / 10) * ((h + 7) / 8) * 16;
-    case IMAGE_FORMAT_ASTC_10x10: return ((w + 9) / 10) * ((h + 9) / 10) * 16;
-    case IMAGE_FORMAT_ASTC_12x10: return ((w + 11) / 12) * ((h + 9) / 10) * 16;
-    case IMAGE_FORMAT_ASTC_12x12: return ((w + 11) / 12) * ((h + 11) / 12) * 16;
-    default: VIMAGE_UNREACHABLE();
+    case DXGI_FORMAT_Y210:
+    case DXGI_FORMAT_Y216:
+        assert(IsPacked(fmt));
+        pitch = ((uint64_t(width) + 1u) >> 1) * 8u;
+        slice = pitch * uint64_t(height);
+        break;
+
+    case DXGI_FORMAT_NV12:
+    case DXGI_FORMAT_420_OPAQUE:
+        assert(IsPlanar(fmt));
+        pitch = ((uint64_t(width) + 1u) >> 1) * 2u;
+        slice = pitch * (uint64_t(height) + ((uint64_t(height) + 1u) >> 1));
+        break;
+
+    case DXGI_FORMAT_P010:
+    case DXGI_FORMAT_P016:
+    case XBOX_DXGI_FORMAT_D16_UNORM_S8_UINT:
+    case XBOX_DXGI_FORMAT_R16_UNORM_X8_TYPELESS:
+    case XBOX_DXGI_FORMAT_X16_TYPELESS_G8_UINT:
+        assert(IsPlanar(fmt));
+        pitch = ((uint64_t(width) + 1u) >> 1) * 4u;
+        slice = pitch * (uint64_t(height) + ((uint64_t(height) + 1u) >> 1));
+        break;
+
+    case DXGI_FORMAT_NV11:
+        assert(IsPlanar(fmt));
+        pitch = ((uint64_t(width) + 3u) >> 2) * 4u;
+        slice = pitch * uint64_t(height) * 2u;
+        break;
+
+    case WIN10_DXGI_FORMAT_P208:
+        assert(IsPlanar(fmt));
+        pitch = ((uint64_t(width) + 1u) >> 1) * 2u;
+        slice = pitch * uint64_t(height) * 2u;
+        break;
+
+    case WIN10_DXGI_FORMAT_V208:
+        assert(IsPlanar(fmt));
+        pitch = uint64_t(width);
+        slice = pitch * (uint64_t(height) + (((uint64_t(height) + 1u) >> 1) * 2u));
+        break;
+
+    case WIN10_DXGI_FORMAT_V408:
+        assert(IsPlanar(fmt));
+        pitch = uint64_t(width);
+        slice = pitch * (uint64_t(height) + (uint64_t(height >> 1) * 4u));
+        break;
+#endif // TODO
+
+    default:
+        //assert(!VImage_IsCompressed(format) && !IsPacked(format) && !IsPlanar(format));
+        assert(!VImage_IsCompressed(format));
+        {
+            uint32_t bpp = VImage_BitsPerPixel(format);
+            // Default byte alignment
+            pitch = (width * bpp + 7u) / 8u;
+            slice = pitch * height;
+        }
+        break;
     }
+
+    *rowPitch = pitch;
+    *slicePitch = slice;
 }
 
 VImage* VImage_Create2D(VImageFormat format, uint32_t width, uint32_t height, uint32_t arraySize, uint32_t mipLevels) {
@@ -332,6 +462,9 @@ VImage* VImage_Create2D(VImageFormat format, uint32_t width, uint32_t height, ui
     image->format = format;
     image->depthOrArraySize = arraySize;
     image->mipLevels = mipLevels;
+    // TODO
+    //image->data = stb_data;
+    //image->size = memorySize;
     return image;
 }
 
@@ -374,4 +507,9 @@ uint32_t VImage_GetWidth(VImage* image, uint32_t level) {
 
 uint32_t VImage_GetHeight(VImage* image, uint32_t level) {
     return _VIMAGE_MAX(image->baseHeight >> level, 1);
+}
+
+
+uint32_t VImage_GetDXGIFormat(VImageFormat format) {
+    return 0;
 }

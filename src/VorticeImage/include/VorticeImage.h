@@ -45,22 +45,60 @@ typedef enum VImageDimension {
 } VImageDimension;
 
 typedef enum VImageFormat {
-    IMAGE_FORMAT_R8,
-    IMAGE_FORMAT_RG8,
-    IMAGE_FORMAT_RGBA8,
-    IMAGE_FORMAT_R16,
-    IMAGE_FORMAT_RG16,
-    IMAGE_FORMAT_RGBA16,
-    IMAGE_FORMAT_R16F,
-    IMAGE_FORMAT_RG16F,
-    IMAGE_FORMAT_RGBA16F,
-    IMAGE_FORMAT_R32F,
-    IMAGE_FORMAT_RG32F,
-    IMAGE_FORMAT_RGBA32F,
-    IMAGE_FORMAT_RGB565,
-    IMAGE_FORMAT_RGB5A1,
-    IMAGE_FORMAT_RGB10A2,
-    IMAGE_FORMAT_RG11B10F,
+    // 8-bit formats
+    IMAGE_FORMAT_R8_UNORM,
+    IMAGE_FORMAT_R8_SNORM,
+    IMAGE_FORMAT_R8_UINT,
+    IMAGE_FORMAT_R8_SINT,
+    // 16-bit formats
+    IMAGE_FORMAT_R16_UNORM,
+    IMAGE_FORMAT_R16_SNORM,
+    IMAGE_FORMAT_R16_UINT,
+    IMAGE_FORMAT_R16_SINT,
+    IMAGE_FORMAT_R16_FLOAT,
+    IMAGE_FORMAT_RG8_UNORM,
+    IMAGE_FORMAT_RG8_SNORM,
+    IMAGE_FORMAT_RG8_UINT,
+    IMAGE_FORMAT_RG8_SINT,
+    // 32-bit formats
+    IMAGE_FORMAT_R32_UINT,
+    IMAGE_FORMAT_R32_SINT,
+    IMAGE_FORMAT_R32_FLOAT,
+    IMAGE_FORMAT_RG16_UNORM,
+    IMAGE_FORMAT_RG16_SNORM,
+    IMAGE_FORMAT_RG16_UINT,
+    IMAGE_FORMAT_RG16_SINT,
+    IMAGE_FORMAT_RG16_FLOAT,
+    IMAGE_FORMAT_RGBA8_UNORM,
+    IMAGE_FORMAT_RGBA8_SNORM,
+    IMAGE_FORMAT_RGBA8_UINT,
+    IMAGE_FORMAT_RGBA8_SINT,
+    IMAGE_FORMAT_BGRA8_UNORM,
+    // Packed 32-Bit Pixel Formats
+    IMAGE_FORMAT_RGB9E5_FLOAT,
+    IMAGE_FORMAT_RGB10A2_UNORM,
+    IMAGE_FORMAT_RGB10A2_UINT,
+    IMAGE_FORMAT_RG11B10_FLOAT,
+    // 64-bit formats
+    IMAGE_FORMAT_RG32_UINT,
+    IMAGE_FORMAT_RG32_SINT,
+    IMAGE_FORMAT_RG32_FLOAT,
+    IMAGE_FORMAT_RGBA16_UNORM,
+    IMAGE_FORMAT_RGBA16_SNORM,
+    IMAGE_FORMAT_RGBA16_UINT,
+    IMAGE_FORMAT_RGBA16_SINT,
+    IMAGE_FORMAT_RGBA16_FLOAT,
+    // 128-bit formats
+    IMAGE_FORMAT_RGBA32_UINT,
+    IMAGE_FORMAT_RGBA32_SINT,
+    IMAGE_FORMAT_RGBA32_FLOAT,
+    // Depth and Stencil formats
+    IMAGE_FORMAT_D16_UNORM,
+    IMAGE_FORMAT_D32_FLOAT,
+    IMAGE_FORMAT_S8,
+    IMAGE_FORMAT_D24_UNORM_S8,
+    IMAGE_FORMAT_D32_FLOAT_S8,
+    // Compressed BC formats
     IMAGE_FORMAT_BC1_UNORM,
     IMAGE_FORMAT_BC2_UNORM,
     IMAGE_FORMAT_BC3_UNORM,
@@ -96,9 +134,8 @@ VIMAGE_API bool VImage_CalculateMipLevels(uint32_t width, uint32_t height, uint3
 VIMAGE_API bool VImage_CalculateMipLevels3D(uint32_t width, uint32_t height, uint32_t depth, uint32_t* pMipLevels);
 
 VIMAGE_API bool VImage_IsCompressed(VImageFormat format);
+VIMAGE_API uint32_t VImage_BitsPerPixel(VImageFormat format);
 VIMAGE_API bool VImage_ComputePitch(VImageFormat format, uint32_t width, uint32_t height, uint32_t* rowPitch, uint32_t* slicePitch);
-
-VIMAGE_API uint32_t VImage_GetMemorySize(VImageFormat format, uint32_t width, uint32_t height);
 
 VIMAGE_API VImage* VImage_Create2D(VImageFormat format, uint32_t width, uint32_t height, uint32_t arraySize, uint32_t mipLevels);
 VIMAGE_API VImage* VImage_CreateFromMemory(const uint8_t* data, size_t size);
@@ -109,5 +146,8 @@ VIMAGE_API uint32_t VImage_GetBaseWidth(VImage* image);
 VIMAGE_API uint32_t VImage_GetBaseHeight(VImage* image);
 VIMAGE_API uint32_t VImage_GetWidth(VImage* image, uint32_t level);
 VIMAGE_API uint32_t VImage_GetHeight(VImage* image, uint32_t level);
+
+/* Conversion methods */
+VIMAGE_API uint32_t VImage_GetDXGIFormat(VImageFormat format);
 
 #endif /* _VIMAGE_H */
