@@ -92,7 +92,7 @@ jobs:
       run: |
         mkdir -p bin/linux-x64
         mv build_linux_64/lib/libVorticeImage.so bin/linux-x64
-        mv build_linux_64/lib/libvma.so bin/linux-x64
+        mv build_linux_64/lib/libVulkanMemoryAllocator.so bin/linux-x64
     - uses: actions/upload-artifact@v3
       with:
         name: vortice_libs_linux
